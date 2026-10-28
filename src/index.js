@@ -1,4 +1,4 @@
-import { callMonobankMcp } from "./connectors/monobank-mcp.js";
+import { callMonobankMcp, MonobankMcpError } from "./connectors/monobank-mcp.js";
 
 export default {
   async fetch(request, env) {
@@ -22,8 +22,8 @@ export default {
         return Response.json({ service: "LedgerSync", monobank_mcp: "connected" },
           { headers: { "Cache-Control": "no-store" } });
       } catch (error) {
-        console.error("Monobank MCP connectivity check failed:", error.message);
-        return Response.json({ service: "LedgerSync", monobank_mcp: "unavailable" },
+        console.error("Monobank MCP connectivity check:", error instanceof MonobankMcpError ? error.category : "transport_failure");
+        return Response.json({ service: "LedgerSync", monobank_mcp: "unavailable", reason: error instanceof MonobankMcpError ? error.category : "transport_failure" },
           { status: 502, headers: { "Cache-Control": "no-store" } });
       }
     }
