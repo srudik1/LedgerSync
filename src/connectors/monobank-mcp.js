@@ -29,12 +29,22 @@ export async function callMonobankMcp(env, method, params = {}) {
     body: JSON.stringify({ jsonrpc: "2.0", id: crypto.randomUUID(), method, params }),
     signal: AbortSignal.timeout(15000)
   });
-  if (!response.ok) throw new Error(`Monobank MCP HTTP ${response.status}`);
+  if (!response.ok) {
+    const code = response.status;
+    const type = code === 401 || code === 403 ? "access_denied"
+      : code === 404 ? "endpoint_not_found"
+      : code >= 500 ? "upstream_error" : "http_error";
+    throw new MonobankMcpError(type, code);
+  }
   const text = await response.text();
-  const data = response.headers.get("content-type")?.includes("text/event-stream")
-    ? parseSseJsonRpc(text)
-    : JSON.parse(text);
-  if (data.error) throw new Error(`Monobank MCP error ${data.error.code ?? "unknown"}`);
+  let data;
+  try {
+    data = response.headers.get("content-type")?.includes("text/event-stream")
+      ? parseSseJsonRpc(text) : JSON.parse(text);
+  } catch {
+    throw new MonobankMcpError("invalid_mcp_response");
+  }
+  if (data.error) throw new MonobankMcpError("mcp_rpc_error", data.error.code);
   return data.result;
 }
 
@@ -49,4 +59,13 @@ function parseSseJsonRpc(text) {
     }
   }
   throw new Error("No JSON-RPC response in MCP event stream");
+}
+
+export class MonobankMcpError extends Error {
+  constructor(category, status = null) {
+    super("Monobank MCP: " + category);
+    this.name = "MonobankMcpError";
+    this.category = category;
+    this.status = status;
+  }
 }
