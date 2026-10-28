@@ -1,6 +1,32 @@
+import { callMonobankMcp } from "./connectors/monobank-mcp.js";
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    // Diagnostic is disabled until a dedicated secret is configured.
+    // Do not expose bank connectivity checks as an unauthenticated public endpoint.
+    if (url.pathname === "/internal/monobank/check") {
+      if (request.method !== "POST") return new Response(null, { status: 405 });
+      const expected = env.MONOBANK_DIAGNOSTIC_KEY;
+      const provided = request.headers.get("X-LedgerSync-Diagnostic-Key");
+      if (!expected || !provided || provided !== expected) {
+        return new Response(null, { status: 404 });
+      }
+      try {
+        await callMonobankMcp(env, "initialize", {
+          protocolVersion: "2025-03-26",
+          capabilities: {},
+          clientInfo: { name: "LedgerSync", version: "0.1.0" }
+        });
+        return Response.json({ service: "LedgerSync", monobank_mcp: "connected" },
+          { headers: { "Cache-Control": "no-store" } });
+      } catch (error) {
+        console.error("Monobank MCP connectivity check failed:", error.message);
+        return Response.json({ service: "LedgerSync", monobank_mcp: "unavailable" },
+          { status: 502, headers: { "Cache-Control": "no-store" } });
+      }
+    }
 
     if (url.pathname === "/health" && request.method === "GET") {
       try {
