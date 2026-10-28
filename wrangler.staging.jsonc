@@ -3,5 +3,12 @@
   "name": "ledger-sync-staging",
   "main": "src/index.js",
   "compatibility_date": "2026-10-28",
-  "workers_dev": true
+  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ledger-sync-db-staging",
+      "database_id": "0287e219-b02c-4255-8de4-9cfac8155348"
+    }
+  ]
 }
