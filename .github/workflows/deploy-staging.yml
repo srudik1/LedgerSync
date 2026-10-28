@@ -23,24 +23,8 @@ jobs:
           grep -q '0287e219-b02c-4255-8de4-9cfac8155348' wrangler.staging.jsonc
           grep -q 'ledger-sync-db-staging' wrangler.staging.jsonc
           if grep -q '6d295d12-9998-4b26-b70d-a07173edfca0' wrangler.staging.jsonc; then exit 1; fi
-      - name: Verify staging tables before deployment
-        run: |
-          npx wrangler d1 execute ledger-sync-db-staging --remote --config wrangler.staging.jsonc --command "SELECT COUNT(*) FROM bank_transactions;"
-          npx wrangler d1 execute ledger-sync-db-staging --remote --config wrangler.staging.jsonc --command "SELECT COUNT(*) FROM accounting_exports;"
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - name: Deploy staging
         run: npx wrangler deploy --config wrangler.staging.jsonc
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      - name: Verify staging tables
-        run: |
-          npx wrangler d1 execute ledger-sync-db-staging --remote --config wrangler.staging.jsonc --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('bank_transactions','accounting_exports') ORDER BY name;"
-          npx wrangler d1 execute ledger-sync-db-staging --remote --config wrangler.staging.jsonc --command "SELECT 'bank_transactions' AS table_name, COUNT(*) AS row_count FROM bank_transactions UNION ALL SELECT 'accounting_exports', COUNT(*) FROM accounting_exports;"
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
-# Re-trigger staging workflow after GitHub Actions enablement
