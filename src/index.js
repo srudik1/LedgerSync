@@ -1,6 +1,15 @@
 import { callMonobankMcp, MonobankMcpError } from "./connectors/monobank-mcp.js";
+import { importMonobankLast30Days } from "./sync/monobank-import.js";
 
 export default {
+  async scheduled(event, env, ctx) {
+    if (env.LEDGERSYNC_ENV !== "staging") return;
+    ctx.waitUntil(importMonobankLast30Days(env).then(result => {
+      console.log("Monobank staging import:", JSON.stringify(result));
+    }).catch(error => {
+      console.error("Monobank staging import failed:", error instanceof MonobankMcpError ? error.category : error.message);
+    }));
+  },
   async fetch(request, env) {
     const url = new URL(request.url);
 
