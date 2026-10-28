@@ -16,6 +16,12 @@ export async function callMonobankMcp(env, method, params = {}) {
     Accept: "application/json, text/event-stream",
     "MCP-Protocol-Version": "2025-03-26"
   };
+  // Cloudflare Access service tokens authenticate machine-to-machine requests.
+  // Store both values as Worker secrets, never in source control.
+  if (env.MONOBANK_ACCESS_CLIENT_ID && env.MONOBANK_ACCESS_CLIENT_SECRET) {
+    headers["CF-Access-Client-Id"] = env.MONOBANK_ACCESS_CLIENT_ID;
+    headers["CF-Access-Client-Secret"] = env.MONOBANK_ACCESS_CLIENT_SECRET;
+  }
   if (env.MONOBANK_MCP_TOKEN) headers.Authorization = `Bearer ${env.MONOBANK_MCP_TOKEN}`;
   const response = await fetch(url, {
     method: "POST",
