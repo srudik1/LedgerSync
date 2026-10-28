@@ -4,6 +4,8 @@
   "main": "src/index.js",
   "compatibility_date": "2026-10-28",
   "workers_dev": true,
+  "vars": { "LEDGERSYNC_ENV": "staging" },
+  "triggers": { "crons": ["0 */6 * * *"] },
   "d1_databases": [
     {
       "binding": "DB",
