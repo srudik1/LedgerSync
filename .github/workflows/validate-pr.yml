@@ -20,6 +20,8 @@ jobs:
           node --check src/connectors/monobank-mcp.js
           node --check src/sync/monobank-import.js
           node --check src/sync/ledger.js
+      - name: Test cron audit failure and duplicate handling
+        run: node tests/cron-audit.test.mjs
       - name: Validate D1 and scheduled environments
         run: |
           node --input-type=module <<'NODE'
