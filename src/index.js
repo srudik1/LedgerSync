@@ -1,9 +1,41 @@
 import { callMonobankMcp, MonobankMcpError } from "./connectors/monobank-mcp.js";
 import { importMonobankLast30Days } from "./sync/monobank-import.js";
 
+
+// Temporary staging-only scheduled test. A D1 primary-key claim makes repeated cron
+// invocations no-ops. It records aggregate counters, never transactions or secrets.
+async function runStagingOnce(env) {
+  if (env.LEDGERSYNC_ENV !== "staging" || !env.LEDGERSYNC_ONESHOT_ID || !env.DB) return;
+  const id = env.LEDGERSYNC_ONESHOT_ID;
+  await env.DB.prepare(
+    "CREATE TABLE IF NOT EXISTS staging_one_shot_runs (run_id TEXT PRIMARY KEY, status TEXT NOT NULL, started_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, finished_at TEXT, accounts INTEGER, received INTEGER, inserted INTEGER, duplicates INTEGER, error_category TEXT)"
+  ).run();
+  const claim = await env.DB.prepare(
+    "INSERT OR IGNORE INTO staging_one_shot_runs (run_id,status) VALUES (?,'running')"
+  ).bind(id).run();
+  if (claim.meta.changes !== 1) return;
+  try {
+    const result = await importMonobankLast30Days(env);
+    await env.DB.prepare(
+      "UPDATE staging_one_shot_runs SET status='success',finished_at=CURRENT_TIMESTAMP,accounts=?,received=?,inserted=?,duplicates=? WHERE run_id=?"
+    ).bind(result.accounts,result.received,result.inserted,result.duplicates,id).run();
+    console.log("Staging one-shot import finished", JSON.stringify({run_id:id,...result}));
+  } catch (error) {
+    const category = error instanceof MonobankMcpError ? error.category : "import_failed";
+    await env.DB.prepare(
+      "UPDATE staging_one_shot_runs SET status='error',finished_at=CURRENT_TIMESTAMP,error_category=? WHERE run_id=?"
+    ).bind(category,id).run();
+    console.error("Staging one-shot import failed",JSON.stringify({run_id:id,category}));
+  }
+}
+
 export default {
   async scheduled(event, env, ctx) {
-    if (!["staging", "production"].includes(env.LEDGERSYNC_ENV)) return;
+    if (env.LEDGERSYNC_ENV === "staging" && env.LEDGERSYNC_ONESHOT_ID) {
+      ctx.waitUntil(runStagingOnce(env));
+      return;
+    }
+    if (env.LEDGERSYNC_ENV !== "production") return;
     ctx.waitUntil(importMonobankLast30Days(env).then(result => {
       console.log("Monobank import:", JSON.stringify(result));
     }).catch(error => {

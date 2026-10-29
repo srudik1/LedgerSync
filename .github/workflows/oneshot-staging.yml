@@ -1,0 +1,56 @@
+name: One-shot Monobank Staging Import
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ledgersync-staging
+  cancel-in-progress: false
+jobs:
+  oneshot:
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - name: Import once and restore staging
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          RUN_ID="staging-oneshot-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          cleanup() {
+            set +e
+            echo "Disabling temporary staging cron"
+            echo "Restoring staging Worker source and standard bindings"
+            npx wrangler deploy --config wrangler.staging.jsonc
+          }
+          trap cleanup EXIT
+          export RUN_ID
+          cp wrangler.staging.jsonc wrangler.once.jsonc
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const p="wrangler.once.jsonc", c=JSON.parse(fs.readFileSync(p,"utf8"));
+            c.vars.LEDGERSYNC_ONESHOT_ID=process.env.RUN_ID;
+            c.triggers={crons:["* * * * *"]};
+            fs.writeFileSync(p,JSON.stringify(c,null,2));
+          ' 
+          npx wrangler deploy --config wrangler.once.jsonc
+          echo "One-shot schedule active. Checking staging D1 for completion."
+          for n in $(seq 1 30); do
+            sleep 15
+            RESULT=$(npx wrangler d1 execute ledger-sync-db-staging --remote --config wrangler.staging.jsonc --json --command "SELECT run_id,status,started_at,finished_at,accounts,received,inserted,duplicates,error_category FROM staging_one_shot_runs WHERE run_id='$RUN_ID'" 2>/dev/null || true)
+            if echo "$RESULT" | grep -q '"status": "success"\|"status":"success"\|"status": "error"\|"status":"error"'; then
+              echo "$RESULT"
+              if echo "$RESULT" | grep -q '"status": "error"\|"status":"error"'; then exit 1; fi
+              exit 0
+            fi
+          done
+          echo "No completed staging import was observed"
+          exit 1
