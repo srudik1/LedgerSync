@@ -34,6 +34,21 @@ export async function callMonobankMcp(env, method, params = {}) {
     const type = code === 401 || code === 403 ? "access_denied"
       : code === 404 ? "endpoint_not_found"
       : code >= 500 ? "upstream_error" : "http_error";
+    // Static labels only: never log URL, request/response bodies, IDs, or credentials.
+    const stage = method === "initialize" ? "initialize"
+      : method === "tools/list" ? "tools_list"
+      : method === "ping" ? "ping"
+      : params?.name === "list_fop_accounts" ? "list_fop_accounts"
+      : params?.name === "get_fop_transactions" ? "get_fop_transactions"
+      : "unknown";
+    const httpCategory = code === 401 ? "http_401"
+      : code === 403 ? "http_403"
+      : code === 404 ? "http_404"
+      : code === 429 ? "http_429"
+      : code >= 500 ? "http_5xx" : "http_other";
+    console.error("Monobank MCP HTTP failure", JSON.stringify({
+      stage, category: type, http_category: httpCategory
+    }));
     throw new MonobankMcpError(type, code);
   }
   const text = await response.text();
