@@ -37,7 +37,7 @@ export default {
       return;
     }
     if (env.LEDGERSYNC_ENV !== "production") return;
-    ctx.waitUntil(runAuditedProductionCron(env));
+    ctx.waitUntil(runAuditedProductionCron(env, event.scheduledTime));
   },
   async fetch(request, env) {
     const url = new URL(request.url);
