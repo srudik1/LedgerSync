@@ -14,5 +14,8 @@
       "database_name": "ledger-sync-db-staging",
       "database_id": "0287e219-b02c-4255-8de4-9cfac8155348"
     }
-  ]
+  ],
+  "triggers": {
+    "crons": []
+  }
 }
