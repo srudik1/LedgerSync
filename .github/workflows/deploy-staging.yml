@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: ledgersync-staging
+  group: ledgersync-staging-restore
   cancel-in-progress: false
 jobs:
   deploy:
