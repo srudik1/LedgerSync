@@ -13,6 +13,7 @@
       "0 */6 * * *"
     ]
   },
+  "services": [{ "binding": "MONOBANK_SERVICE", "service": "monobank" }],
   "d1_databases": [
     {
       "binding": "DB",
