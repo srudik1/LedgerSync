@@ -23,7 +23,10 @@ export async function callMonobankMcp(env, method, params = {}) {
     headers["CF-Access-Client-Secret"] = env.MONOBANK_ACCESS_CLIENT_SECRET;
   }
   if (env.MONOBANK_MCP_TOKEN) headers.Authorization = `Bearer ${env.MONOBANK_MCP_TOKEN}`;
-  const response = await fetch(url, {
+  const transport = env.MONOBANK_SERVICE && env.MONOBANK_BINDING_KEY
+    ? env.MONOBANK_SERVICE.fetch.bind(env.MONOBANK_SERVICE) : fetch;
+  if (transport !== fetch) headers["X-LedgerSync-Internal-Key"] = env.MONOBANK_BINDING_KEY;
+  const response = await transport(url, {
     method: "POST",
     headers,
     body: JSON.stringify({ jsonrpc: "2.0", id: crypto.randomUUID(), method, params }),

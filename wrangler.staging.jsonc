@@ -8,6 +8,7 @@
     "LEDGERSYNC_ENV": "staging",
     "MONOBANK_MCP_URL": "https://monobank.srudik.workers.dev/mcp"
   },
+  "services": [{ "binding": "MONOBANK_SERVICE", "service": "monobank" }],
   "d1_databases": [
     {
       "binding": "DB",
