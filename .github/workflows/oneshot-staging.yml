@@ -1,9 +1,6 @@
 name: One-shot Monobank Staging Import
 on:
   workflow_dispatch:
-  push:
-    branches: [develop]
-    paths: ['.github/workflows/oneshot-staging.yml']
 permissions:
   contents: read
 concurrency:
@@ -11,6 +8,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   oneshot:
+    if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     environment: staging
     timeout-minutes: 12
