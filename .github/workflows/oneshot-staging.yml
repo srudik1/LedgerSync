@@ -1,6 +1,9 @@
 name: One-shot Monobank Staging Import
 on:
   workflow_dispatch:
+  push:
+    branches: [develop]
+    paths: ['.github/workflows/oneshot-staging.yml']
 permissions:
   contents: read
 concurrency:
@@ -33,6 +36,8 @@ jobs:
           }
           trap cleanup EXIT
           export RUN_ID
+          echo "Restoring standard staging configuration before test"
+          npx wrangler deploy --config wrangler.staging.jsonc
           cp wrangler.staging.jsonc wrangler.once.jsonc
           node --input-type=module -e '
             import fs from "node:fs";
