@@ -1,3 +1,4 @@
+import { runAuditedProductionCron } from "./sync/cron-audit.js";
 import { callMonobankMcp, MonobankMcpError } from "./connectors/monobank-mcp.js";
 import { importMonobankLast30Days } from "./sync/monobank-import.js";
 
@@ -36,11 +37,7 @@ export default {
       return;
     }
     if (env.LEDGERSYNC_ENV !== "production") return;
-    ctx.waitUntil(importMonobankLast30Days(env).then(result => {
-      console.log("Monobank import:", JSON.stringify(result));
-    }).catch(error => {
-      console.error("Monobank import failed:", error instanceof MonobankMcpError ? error.category : error.message);
-    }));
+    ctx.waitUntil(runAuditedProductionCron(env, event.scheduledTime));
   },
   async fetch(request, env) {
     const url = new URL(request.url);
