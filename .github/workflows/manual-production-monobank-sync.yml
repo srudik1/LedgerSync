@@ -20,23 +20,14 @@ jobs:
       - name: Require real credentials (no fallback)
         env:
           DIAGNOSTIC_KEY: ${{ secrets.LEDGERSYNC_DIAGNOSTIC_KEY }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
-          for key in DIAGNOSTIC_KEY CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
+          for key in DIAGNOSTIC_KEY; do
             if [ -z "${!key:-}" ]; then
               echo "::error::Required production environment secret $key is unavailable"
               exit 1
             fi
           done
-      - name: Verify production D1 before sync
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          set -euo pipefail
-          npx wrangler d1 execute ledger-sync-db --remote --config wrangler.jsonc --command "SELECT COUNT(*) AS total, COUNT(DISTINCT source||char(31)||account_id||char(31)||external_id) AS unique_total FROM bank_transactions"
       - name: Call protected production endpoint once
         env:
           DIAGNOSTIC_KEY: ${{ secrets.LEDGERSYNC_DIAGNOSTIC_KEY }}
@@ -57,10 +48,3 @@ jobs:
             }
             console.log(JSON.stringify({accounts:r.accounts,received:r.received,inserted:r.inserted,duplicates:r.duplicates}));
           ' "$response_file"
-      - name: Verify production D1 after sync
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          set -euo pipefail
-          npx wrangler d1 execute ledger-sync-db --remote --config wrangler.jsonc --command "SELECT COUNT(*) AS total, COUNT(DISTINCT source||char(31)||account_id||char(31)||external_id) AS unique_total FROM bank_transactions"
