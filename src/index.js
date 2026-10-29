@@ -63,7 +63,8 @@ export default {
           error instanceof MonobankMcpError ? error.category : error.message);
         return Response.json({
           status: "error",
-          reason: error instanceof MonobankMcpError ? error.category : "import_failed"
+          reason: error instanceof MonobankMcpError ? error.category : "import_failed",
+          stage: error instanceof MonobankMcpError && ["list_fop_accounts", "get_fop_transactions"].includes(error.stage) ? error.stage : "unknown"
         }, { status: 502, headers: { "Cache-Control": "no-store" } });
       }
     }

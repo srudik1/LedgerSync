@@ -49,7 +49,9 @@ export async function callMonobankMcp(env, method, params = {}) {
     console.error("Monobank MCP HTTP failure", JSON.stringify({
       stage, category: type, http_category: httpCategory
     }));
-    throw new MonobankMcpError(type, code);
+    const error = new MonobankMcpError(type, code);
+    error.stage = ["list_fop_accounts", "get_fop_transactions"].includes(stage) ? stage : "unknown";
+    throw error;
   }
   const text = await response.text();
   let data;
