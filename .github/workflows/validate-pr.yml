@@ -1,0 +1,41 @@
+name: Validate Pull Request
+on:
+  pull_request:
+    branches: [develop, main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - name: Validate JavaScript syntax
+        run: |
+          node --check src/index.js
+          node --check src/connectors/monobank-mcp.js
+          node --check src/sync/monobank-import.js
+          node --check src/sync/ledger.js
+      - name: Validate D1 and scheduled environments
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const prod = JSON.parse(fs.readFileSync('wrangler.jsonc', 'utf8'));
+          const staging = JSON.parse(fs.readFileSync('wrangler.staging.jsonc', 'utf8'));
+          assert.equal(prod.name, 'ledger-sync');
+          assert.equal(staging.name, 'ledger-sync-staging');
+          assert.equal(prod.vars.LEDGERSYNC_ENV, 'production');
+          assert.equal(staging.vars.LEDGERSYNC_ENV, 'staging');
+          assert.equal(prod.d1_databases[0].database_id, '6d295d12-9998-4b26-b70d-a07173edfca0');
+          assert.equal(staging.d1_databases[0].database_id, '0287e219-b02c-4255-8de4-9cfac8155348');
+          assert.deepEqual(prod.triggers.crons, ['0 */6 * * *']);
+          assert.ok(!staging.triggers?.crons?.length, 'staging cron must remain disabled');
+          NODE
+      - name: Dry run staging bundle (no deployment)
+        run: npx wrangler deploy --dry-run --config wrangler.staging.jsonc
+      - name: Dry run production bundle (no deployment)
+        run: npx wrangler deploy --dry-run --config wrangler.jsonc
