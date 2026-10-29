@@ -3,5 +3,21 @@
   "name": "ledger-sync",
   "main": "src/index.js",
   "compatibility_date": "2026-10-28",
-  "workers_dev": true
+  "workers_dev": true,
+  "vars": {
+    "LEDGERSYNC_ENV": "production",
+    "MONOBANK_MCP_URL": "https://monobank.srudik.workers.dev/mcp"
+  },
+  "triggers": {
+    "crons": [
+      "0 */6 * * *"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ledger-sync-db",
+      "database_id": "6d295d12-9998-4b26-b70d-a07173edfca0"
+    }
+  ]
 }

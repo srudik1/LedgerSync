@@ -4,8 +4,10 @@
   "main": "src/index.js",
   "compatibility_date": "2026-10-28",
   "workers_dev": true,
-  "vars": { "LEDGERSYNC_ENV": "staging", "MONOBANK_MCP_URL": "https://monobank.srudik.workers.dev/mcp" },
-  "triggers": { "crons": ["0 */6 * * *"] },
+  "vars": {
+    "LEDGERSYNC_ENV": "staging",
+    "MONOBANK_MCP_URL": "https://monobank.srudik.workers.dev/mcp"
+  },
   "d1_databases": [
     {
       "binding": "DB",
