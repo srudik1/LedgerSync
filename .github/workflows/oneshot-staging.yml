@@ -28,11 +28,11 @@ jobs:
           cleanup() {
             set +e
             echo "Disabling temporary staging cron"
-            npx wrangler triggers deploy --config wrangler.staging.jsonc
             echo "Restoring staging Worker source and standard bindings"
             npx wrangler deploy --config wrangler.staging.jsonc
           }
           trap cleanup EXIT
+          export RUN_ID
           cp wrangler.staging.jsonc wrangler.once.jsonc
           node --input-type=module -e '
             import fs from "node:fs";
@@ -41,7 +41,6 @@ jobs:
             c.triggers={crons:["* * * * *"]};
             fs.writeFileSync(p,JSON.stringify(c,null,2));
           ' 
-          export RUN_ID
           npx wrangler deploy --config wrangler.once.jsonc
           echo "One-shot schedule active. Checking staging D1 for completion."
           for n in $(seq 1 30); do
