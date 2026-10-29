@@ -1,0 +1,66 @@
+name: Manual Monobank Production Sync
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ledgersync-production-manual-sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - name: Require real credentials (no fallback)
+        env:
+          DIAGNOSTIC_KEY: ${{ secrets.LEDGERSYNC_DIAGNOSTIC_KEY }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          for key in DIAGNOSTIC_KEY CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
+            if [ -z "${!key:-}" ]; then
+              echo "::error::Required production environment secret $key is unavailable"
+              exit 1
+            fi
+          done
+      - name: Verify production D1 before sync
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute ledger-sync-db --remote --config wrangler.jsonc --command "SELECT COUNT(*) AS total, COUNT(DISTINCT source||char(31)||account_id||char(31)||external_id) AS unique_total FROM bank_transactions"
+      - name: Call protected production endpoint once
+        env:
+          DIAGNOSTIC_KEY: ${{ secrets.LEDGERSYNC_DIAGNOSTIC_KEY }}
+        run: |
+          set -euo pipefail
+          response_file="$(mktemp)"
+          trap 'rm -f "$response_file"' EXIT
+          status="$(curl --silent --show-error --max-time 180 --retry 0 --output "$response_file" --write-out '%{http_code}' --request POST --header "X-LedgerSync-Diagnostic-Key: $DIAGNOSTIC_KEY" --header 'Content-Type: application/json' 'https://ledger-sync.srudik.workers.dev/internal/monobank/sync')"
+          if [ "$status" != "200" ]; then
+            echo "::error::Production manual sync failed, HTTP $status (response withheld)"
+            exit 1
+          fi
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));
+            for(const key of ["accounts","received","inserted","duplicates"]) {
+              if(!Number.isSafeInteger(r[key]) || r[key]<0) throw new Error("Unexpected sync response shape");
+            }
+            console.log(JSON.stringify({accounts:r.accounts,received:r.received,inserted:r.inserted,duplicates:r.duplicates}));
+          ' "$response_file"
+      - name: Verify production D1 after sync
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute ledger-sync-db --remote --config wrangler.jsonc --command "SELECT COUNT(*) AS total, COUNT(DISTINCT source||char(31)||account_id||char(31)||external_id) AS unique_total FROM bank_transactions"
