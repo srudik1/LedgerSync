@@ -37,17 +37,19 @@ jobs:
           trap 'rm -f "$response_file"' EXIT
           status="$(curl --silent --show-error --max-time 180 --retry 0 --output "$response_file" --write-out '%{http_code}' --request POST --header "X-LedgerSync-Diagnostic-Key: $DIAGNOSTIC_KEY" --header 'Content-Type: application/json' 'https://ledger-sync.srudik.workers.dev/internal/monobank/sync')"
           if [ "$status" != "200" ]; then
-            reason="$(node --input-type=module -e '
+            diagnostic="$(node --input-type=module -e '
               import fs from "node:fs";
               const allowed = new Set(["access_denied","rate_limited","authentication_failed","transport_failure","upstream_error","invalid_response","timeout","import_failed","endpoint_not_found","http_error","invalid_mcp_response","mcp_rpc_error"]);
               let reason = "unavailable";
+              let stage = "unknown";
               try {
                 const parsed = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
                 if (typeof parsed?.reason === "string" && allowed.has(parsed.reason)) reason = parsed.reason;
+                if (parsed?.stage === "list_fop_accounts" || parsed?.stage === "get_fop_transactions") stage = parsed.stage;
               } catch {}
-              process.stdout.write(reason);
+              process.stdout.write(`reason=${reason}, stage=${stage}`);
             ' "$response_file")"
-            echo "::error::Production manual sync failed, HTTP $status, reason=$reason"
+            echo "::error::Production manual sync failed, HTTP $status, $diagnostic"
             exit 1
           fi
           node --input-type=module -e '
