@@ -3,6 +3,11 @@ on:
   push:
     branches: [develop]
   workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ledgersync-staging-restore
+  cancel-in-progress: false
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -13,6 +18,11 @@ jobs:
         with:
           node-version: '22'
       - run: npm install
+      - name: Validate staging D1 target
+        run: |
+          grep -q '0287e219-b02c-4255-8de4-9cfac8155348' wrangler.staging.jsonc
+          grep -q 'ledger-sync-db-staging' wrangler.staging.jsonc
+          if grep -q '6d295d12-9998-4b26-b70d-a07173edfca0' wrangler.staging.jsonc; then exit 1; fi
       - name: Deploy staging
         run: npx wrangler deploy --config wrangler.staging.jsonc
         env:
