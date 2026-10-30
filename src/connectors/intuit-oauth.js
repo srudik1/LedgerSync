@@ -1,3 +1,4 @@
+import {connectIntuitRealm} from "./intuit-tokens.js";
 const authorizeEndpoint = "https://appcenter.intuit.com/connect/oauth2";
 const noStore = {"Cache-Control":"no-store","Referrer-Policy":"no-referrer"};
 const json = (value,status=200) => Response.json(value,{status,headers:noStore});
@@ -15,6 +16,19 @@ export async function intuitOAuth(request,env,url) {
   for(const [key,value] of Object.entries({client_id:env.INTUIT_CLIENT_ID,scope:"com.intuit.quickbooks.accounting",redirect_uri:env.INTUIT_REDIRECT_URI,response_type:"code",state}))target.searchParams.set(key,value);
   return json({authorization_url:target.toString(),expires_in:600});
  }
- if(url.pathname==="/oauth/intuit/callback") return json({error:"callback_not_ready"},503);
+ if(url.pathname==="/oauth/intuit/callback") {
+  if(request.method!=="GET")return new Response(null,{status:405});
+  if(url.origin+url.pathname!==env.INTUIT_REDIRECT_URI)return json({error:"redirect_mismatch"},400);
+  if(url.searchParams.has("error"))return json({error:"authorization_denied"},400);
+  const state=url.searchParams.get("state"),realm=url.searchParams.get("realmId"),code=url.searchParams.get("code");
+  if(!state||!realm||!code)return json({error:"invalid_callback"},400);
+  const accepted=await env.DB.prepare("DELETE FROM intuit_oauth_states WHERE state_hash=? AND expires_at>? RETURNING state_hash").bind(await sha(state),new Date().toISOString()).first();
+  if(!accepted)return json({error:"expired_or_used_state"},400);
+  try {
+   if(!env.INTUIT_CLIENT_SECRET||!env.INTUIT_TOKEN_ENCRYPTION_KEY)return json({error:"oauth_unconfigured"},503);
+   await connectIntuitRealm(env,realm,code);
+   return new Response("QuickBooks connected. You can close this tab.",{headers:{...noStore,"Content-Type":"text/plain; charset=utf-8"}});
+  }catch{return json({error:"connection_failed"},502);}
+ }
  return json({error:"not_found"},404);
 }
