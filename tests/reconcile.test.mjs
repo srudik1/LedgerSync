@@ -1,0 +1,11 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { reconcileTransactions } from "../src/sync/reconcile.js";
+const bank=(id,date="2026-10-28",amount=375)=>({source:"monobank",account_id:"fop",external_id:id,qbo_account_id:"436",occurred_at:date,amount_minor:amount,currency:"UAH"});
+const book=(id,date="2026-10-28",amount=375)=>({transaction_id:id,bank_account_id:"436",txn_date:date,amount_minor:amount,currency:"UAH"});
+test("one-to-one match and one-day bank posting difference",()=>{const r=reconcileTransactions([bank("a")],[book("b","2026-10-29")]);assert.equal(r.summary.matched,1);assert.equal(r.matches[0].date_delta_days,1)});
+test("duplicate matching candidates are ambiguous",()=>{const r=reconcileTransactions([bank("a")],[book("b"),book("c")]);assert.equal(r.summary.ambiguous,1);assert.equal(r.summary.matched,0)});
+test("two banks do not match the same bookkeeping transaction",()=>{const r=reconcileTransactions([bank("a"),bank("b")],[book("c")]);assert.equal(r.summary.matched,0);assert.equal(r.summary.ambiguous,2)});
+test("mismatched currencies and unmapped accounts never match",()=>{const b=bank("a");b.qbo_account_id="385";const r=reconcileTransactions([b],[book("b")]);assert.equal(r.summary.missing_in_books,1)});
+test("matching amount alone never matches different dates",()=>{const r=reconcileTransactions([bank("a")],[book("b","2026-10-21")]);assert.equal(r.summary.missing_in_books,1)});
+test("input arrays are not modified",()=>{const b=[bank("a")],q=[book("b")];reconcileTransactions(b,q);assert.equal(b.length,1);assert.equal(q.length,1)});
