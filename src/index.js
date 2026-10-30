@@ -1,3 +1,4 @@
+import { intuitOAuth } from "./connectors/intuit-oauth.js";
 import { runAuditedProductionCron } from "./sync/cron-audit.js";
 import { callMonobankMcp, MonobankMcpError } from "./connectors/monobank-mcp.js";
 import { importMonobankLast30Days } from "./sync/monobank-import.js";
@@ -41,6 +42,8 @@ export default {
   },
   async fetch(request, env) {
     const url = new URL(request.url);
+    const oauthResponse = await intuitOAuth(request,env,url);
+    if(oauthResponse) return oauthResponse;
 
     // Authenticated manual import, used for one-off verification and recovery.
     // The key is stored as a Worker secret, never as a URL parameter.
