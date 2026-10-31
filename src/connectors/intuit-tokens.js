@@ -26,7 +26,8 @@ export async function getIntuitAccessToken(env,realm){
   if(saved.meta.changes!==1)throw Error("refresh_version_conflict");
   return updated.access_token;
  }catch(error){
-  await env.DB.prepare("UPDATE intuit_connections SET refresh_locked_until=NULL WHERE realm_id=? AND version=?").bind(realm,row.version).run();
+  // Preserve the lease after an ambiguous exchange: the provider may have rotated the token.
+  // An operator must reconcile uncertain refresh results before another attempt.
   throw error;
  }
 }
