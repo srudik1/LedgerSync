@@ -18,7 +18,7 @@ export async function getIntuitAccessToken(env,realm){
  if(!row)throw Error("realm_not_connected");
  const current=await revealTokens(env,realm,row.encrypted_tokens);
  if(Date.parse(row.access_expires_at)>Date.now()+30000)return current.access_token;
- const lease=await env.DB.prepare("UPDATE intuit_connections SET refresh_locked_until=? WHERE realm_id=? AND version=? AND (refresh_locked_until IS NULL OR refresh_locked_until<?)").bind(new Date(Date.now()+60000).toISOString(),realm,row.version,new Date().toISOString()).run();
+ const lease=await env.DB.prepare("UPDATE intuit_connections SET refresh_locked_until=? WHERE realm_id=? AND version=? AND (refresh_locked_until IS NULL OR refresh_locked_until<?)").bind(new Date(Date.now()+315360000000).toISOString(),realm,row.version,new Date().toISOString()).run();
  if(lease.meta.changes!==1)throw Error("refresh_in_progress");
  try{
   const updated=await exchange(env,{grant_type:"refresh_token",refresh_token:current.refresh_token});
@@ -26,7 +26,8 @@ export async function getIntuitAccessToken(env,realm){
   if(saved.meta.changes!==1)throw Error("refresh_version_conflict");
   return updated.access_token;
  }catch(error){
-  await env.DB.prepare("UPDATE intuit_connections SET refresh_locked_until=NULL WHERE realm_id=? AND version=?").bind(realm,row.version).run();
+  // Preserve the lease after an ambiguous exchange: the provider may have rotated the token.
+  // An operator must reconcile uncertain refresh results before another attempt.
   throw error;
  }
 }

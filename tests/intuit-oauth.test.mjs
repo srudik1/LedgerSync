@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {intuitOAuth} from "../src/connectors/intuit-oauth.js";
 import {protectTokens,revealTokens} from "../src/connectors/intuit-token-store.js";
 const key="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-const env={INTUIT_CLIENT_ID:"sandbox-id",INTUIT_REDIRECT_URI:"https://ledger-sync-staging.srudik.workers.dev/oauth/intuit/callback",INTUIT_OAUTH_ADMIN_KEY:"private",INTUIT_TOKEN_ENCRYPTION_KEY:key,DB:{prepare:()=>({bind:()=>({run:async()=>({meta:{changes:1}})})})}};
+const env={INTUIT_CLIENT_ID:"sandbox-id",INTUIT_REDIRECT_URI:"https://ledger-sync-staging.srudik.workers.dev/oauth/intuit/callback",INTUIT_OAUTH_ADMIN_KEY:"private",INTUIT_CLIENT_SECRET:"fake-test-secret",INTUIT_TOKEN_ENCRYPTION_KEY:key,DB:{prepare:()=>({bind:()=>({run:async()=>({meta:{changes:1}})})})}};
 test("authorization start requires authenticated POST",async()=>{
  const target="https://ledger-sync-staging.srudik.workers.dev/oauth/intuit/start";
  assert.equal((await intuitOAuth(new Request(target,{method:"POST"}),env,new URL(target))).status,404);
@@ -30,3 +30,5 @@ test("invalid callback without required parameters is rejected",async()=>{
  const result=await intuitOAuth(new Request(target),env,new URL(target));
  assert.equal(result.status,400);
 });
+
+test("OAuth fails closed when client secret is absent",async()=>{const e={...env,INTUIT_CLIENT_SECRET:undefined};const target="https://ledger-sync-staging.srudik.workers.dev/oauth/intuit/start";const response=await intuitOAuth(new Request(target,{method:"POST",headers:{Authorization:"Bearer private"}}),e,new URL(target));assert.equal(response.status,503);});
