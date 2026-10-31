@@ -1,6 +1,6 @@
-# LedgerSync — draft pages for Steven Rudik
+# LedgerSync — approved pages for Steven Rudik
 
-Not published. Prepared for operator review. Proposed routes are listed below; production availability has not been verified.
+Approved by Steven Rudik for staging validation and publication on 31 October 2026. Production availability must be verified after deployment.
 
 ---
 
@@ -54,7 +54,7 @@ Last updated: 31 October 2026.
 
 ### Operator and pilot access
 
-LedgerSync is operated by Steven Rudik. These proposed terms apply to expressly authorized private pilot use. Merely viewing these pages does not create a paid subscription or authorize access to financial accounts.
+LedgerSync is operated by Steven Rudik. These terms apply to expressly authorized private pilot use. Merely viewing these pages does not create a paid subscription or authorize access to financial accounts.
 
 
 ### Permission to use
@@ -87,7 +87,7 @@ The Privacy Policy explains the current data handling. You may stop using the pi
 The pilot may contain errors, require manual intervention, or be unavailable. No uninterrupted availability, accounting accuracy, or production-readiness guarantee is made. These terms do not exclude rights or obligations that cannot lawfully be excluded. No fees, governing law, courts, or liability cap are specified here; any such terms require separate agreement.
 
 
-Contact Steven Rudik at srudik@gmail.com for support or to discuss these terms. These terms are proposed for operator approval before publication and use.
+Contact Steven Rudik at srudik@gmail.com for support or to discuss these terms.
 
 ---
 
