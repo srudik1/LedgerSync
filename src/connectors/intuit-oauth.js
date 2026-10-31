@@ -6,7 +6,7 @@ const encode = bytes => btoa(String.fromCharCode(...bytes)).replaceAll("+","-").
 const sha = async value => encode(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value))));
 export async function intuitOAuth(request,env,url) {
  if (!url.pathname.startsWith("/oauth/intuit/")) return null;
- if (!env.INTUIT_CLIENT_ID || !env.INTUIT_REDIRECT_URI || !env.INTUIT_OAUTH_ADMIN_KEY || !env.DB) return json({error:"oauth_unconfigured"},503);
+ if (!env.INTUIT_CLIENT_ID || !env.INTUIT_REDIRECT_URI || !env.INTUIT_OAUTH_ADMIN_KEY || !env.INTUIT_CLIENT_SECRET || !env.INTUIT_TOKEN_ENCRYPTION_KEY || !env.DB) return json({error:"oauth_unconfigured"},503);
  if (url.pathname === "/oauth/intuit/start") {
   if(request.method!=="POST") return new Response(null,{status:405});
   if(request.headers.get("Authorization")!=="Bearer "+env.INTUIT_OAUTH_ADMIN_KEY) return new Response(null,{status:404});
@@ -21,7 +21,7 @@ export async function intuitOAuth(request,env,url) {
   if(url.origin+url.pathname!==env.INTUIT_REDIRECT_URI)return json({error:"redirect_mismatch"},400);
   if(url.searchParams.has("error"))return json({error:"authorization_denied"},400);
   const state=url.searchParams.get("state"),realm=url.searchParams.get("realmId"),code=url.searchParams.get("code");
-  if(!state||!realm||!code)return json({error:"invalid_callback"},400);
+  if(!state||!realm||!code||!/^[a-zA-Z0-9_-]{1,128}$/.test(realm))return json({error:"invalid_callback"},400);
   const accepted=await env.DB.prepare("DELETE FROM intuit_oauth_states WHERE state_hash=? AND expires_at>? RETURNING state_hash").bind(await sha(state),new Date().toISOString()).first();
   if(!accepted)return json({error:"expired_or_used_state"},400);
   try {
