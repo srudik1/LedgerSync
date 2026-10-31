@@ -42,7 +42,7 @@ The current pilot does not implement a scheduled automatic deletion period. Impo
 
 ### Contact and changes
 
-For privacy requests, contact Steven Rudik through the private channel used to arrange your LedgerSync access. No public support email is designated in this draft. A public contact method must be confirmed before these pages are used for a public launch. Material changes to this policy will be shared with private pilot participants before new data uses are enabled.
+For privacy, access, correction, deletion, or support requests, contact Steven Rudik at srudik@gmail.com. Material changes to this policy will be shared with private pilot participants before new data uses are enabled.
 
 ---
 
@@ -87,7 +87,7 @@ The Privacy Policy explains the current data handling. You may stop using the pi
 The pilot may contain errors, require manual intervention, or be unavailable. No uninterrupted availability, accounting accuracy, or production-readiness guarantee is made. These terms do not exclude rights or obligations that cannot lawfully be excluded. No fees, governing law, courts, or liability cap are specified here; any such terms require separate agreement.
 
 
-Contact Steven Rudik through the private channel used to arrange your access. These terms are proposed for operator approval before publication and use.
+Contact Steven Rudik at srudik@gmail.com for support or to discuss these terms. These terms are proposed for operator approval before publication and use.
 
 ---
 
@@ -97,7 +97,7 @@ Proposed route: `/connect`
 This is the connection entry point for the private LedgerSync pilot, operated by Steven Rudik.
 
 
-- Contact the operator through the private channel used to arrange your pilot access.
+- Contact Steven Rudik at srudik@gmail.com to arrange pilot access or request a connection link.
 
 - The operator starts an authenticated connection request and provides a short-lived Intuit authorization link.
 
@@ -109,7 +109,7 @@ This is the connection entry point for the private LedgerSync pilot, operated by
 Reconnecting uses the same process. Opening this page does not connect an account or grant access. Never send your Intuit password, verification code, client secret, or access token to the operator or enter it on this page.
 
 
-Review the Privacy Policy and End-user License Agreement before connecting. Connection support is available through your existing private channel with Steven Rudik.
+Review the Privacy Policy and End-user License Agreement before connecting. For connection support, email Steven Rudik at srudik@gmail.com.
 
 ---
 
@@ -119,7 +119,7 @@ Proposed route: `/disconnect`
 A QuickBooks company administrator can revoke LedgerSync access using the connected-app management controls in QuickBooks Online. Select the LedgerSync connection and confirm disconnection there.
 
 
-If you need assistance, contact Steven Rudik through the private channel used to arrange your pilot access. Specify the company to disconnect, but do not send passwords or tokens.
+If you need assistance, contact Steven Rudik at srudik@gmail.com. Specify the company to disconnect, but do not send passwords or tokens.
 
 
 Opening this page does not revoke access and is not confirmation that disconnection succeeded. Verify the result in QuickBooks.
