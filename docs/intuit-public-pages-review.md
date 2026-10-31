@@ -1,10 +1,10 @@
-# LedgerSync Intuit pages — operator review
+# LedgerSync Intuit pages — approved publication
 
 Operator confirmed by the user: **Steven Rudik**, acting personally.
 
 Support/privacy email: **srudik@gmail.com**, read from the Intuit account profile after the user authorized use of that profile email.
 
-These changes are drafts for review on a feature branch. They do not publish pages, deploy production, change credentials, or submit the Intuit questionnaire.
+The operator approved these texts and authorized staging validation and publication on 31 October 2026. Deployment and verification are tracked in PR #29. No credential changes, accounting writes, or final Intuit questionnaire submission are part of this change.
 
 ## Proposed production form values after publication and verification
 
@@ -29,10 +29,10 @@ These URLs are planned routes, not a claim that the current production deploymen
 - The planned ChatGPT control plane is identified as planned, rather than an active data recipient.
 - No assertion that the application has passed Intuit security review or live sandbox connect/disconnect testing is made.
 
-## Before publication or form submission
+## Deployment and form completion
 
-1. The operator must review the proposed privacy practices and license terms. The user-selected Intuit profile email, srudik@gmail.com, is now included for public support and privacy requests.
-2. Validate the change in staging as required by AGENTS.md, without enabling accounting writes. Then approve publication and verify all production routes.
-3. Remove draft/proposed wording from final approved terms before treating the policies as final. The contact method is confirmed.
+1. Operator review is complete. The user-selected Intuit profile email, srudik@gmail.com, is included for support and privacy requests.
+2. Validate in staging as required by AGENTS.md without enabling accounting writes, then deploy the approved pages and verify all production routes.
+3. The approved terms no longer contain draft/proposed wording. The contact method is confirmed.
 4. Only then use the verified public URLs in Intuit. Complete remaining compliance questions based on actual deployed capabilities and user-confirmed organizational facts.
 5. Show completed form values to the user before final submission, as requested.
