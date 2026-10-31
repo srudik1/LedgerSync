@@ -19,6 +19,13 @@ export async function intuitOAuth(request,env,url) {
   if(request.headers.get("Authorization")!=="Bearer "+env.INTUIT_OAUTH_ADMIN_KEY) return new Response(null,{status:404});
   return json({authorization_url:await authorizationUrl(env),expires_in:600});
  }
+ if(url.pathname==="/oauth/intuit/invite") {
+  if(request.method!=="POST")return new Response(null,{status:405,headers:noStore});
+  if(request.headers.get("Authorization")!=="Bearer "+env.INTUIT_OAUTH_ADMIN_KEY)return new Response(null,{status:404,headers:noStore});
+  const ticket=encode(crypto.getRandomValues(new Uint8Array(32)));
+  await env.DB.prepare("INSERT INTO intuit_oauth_tickets(ticket_hash,expires_at) VALUES (?,?)").bind(await sha(ticket),new Date(Date.now()+600000).toISOString()).run();
+  return json({connect_url:url.origin+"/oauth/intuit/connect?ticket="+ticket,expires_in:600});
+ }
  if(url.pathname==="/oauth/intuit/connect") {
   if(request.method!=="GET")return new Response(null,{status:405,headers:noStore});
   const ticket=url.searchParams.get("ticket");
