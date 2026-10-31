@@ -32,3 +32,6 @@ test("invalid callback without required parameters is rejected",async()=>{
 });
 
 test("OAuth fails closed when client secret is absent",async()=>{const e={...env,INTUIT_CLIENT_SECRET:undefined};const target="https://ledger-sync-staging.srudik.workers.dev/oauth/intuit/start";const response=await intuitOAuth(new Request(target,{method:"POST",headers:{Authorization:"Bearer private"}}),e,new URL(target));assert.equal(response.status,503);});
+
+test("connect link rejects missing ticket",async()=>{const target="https://ledger-sync-staging.srudik.workers.dev/oauth/intuit/connect";const result=await intuitOAuth(new Request(target),env,new URL(target));assert.equal(result.status,403);});
+test("invitation creation requires admin authorization",async()=>{const target="https://ledger-sync-staging.srudik.workers.dev/oauth/intuit/invite";const result=await intuitOAuth(new Request(target,{method:"POST"}),env,new URL(target));assert.equal(result.status,404);});
