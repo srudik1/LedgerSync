@@ -33,6 +33,8 @@ jobs:
         run: node --test tests/posting-planner.test.mjs
       - name: Test Intuit OAuth (no live connectivity)
         run: node --test tests/intuit-oauth.test.mjs
+      - name: Test public pages and existing routing (no live connectivity)
+        run: node --test tests/public-pages.test.mjs
       - name: Validate D1 and scheduled environments
         run: |
           node --input-type=module <<'NODE'
