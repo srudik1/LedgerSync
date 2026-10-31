@@ -149,7 +149,21 @@ It is a pilot of a universal platform, **not** an architectural limitation.
 
 The first complete version must: ingest bank operations automatically; route to the proper company and account; avoid re-creating existing documents; post approved operations automatically; reconcile balances and results; send ambiguous cases to an exception queue; audit every action; and function without an open ChatGPT session or manual workflow trigger.
 
-## 13. Success Criterion
+## 13. ChatGPT Control Plane (Mandatory)
+
+LedgerSync **must be manageable directly from ChatGPT** through a first-party, authenticated LedgerSync API/MCP integration. ChatGPT is a user-facing control plane and conversational interface, **not** a runtime dependency of the autonomous accounting engine. Scheduled ingestion, rules, posting, verification, and audit must continue even if ChatGPT is disconnected.
+
+The LedgerSync management API/MCP must support:
+- **Read and inspect:** companies, sources, connectors, account mappings, transactions, documents, posting status, balances, errors, and audit history, with data minimization.
+- **Rules management:** propose, create, edit, version, test, approve, activate, pause, and retire accounting rules with appropriate authorization.
+- **Exception review:** inspect ambiguities, approve or reject proposed resolutions, and trace decisions back to original events and accounting documents.
+- **Controlled execution:** initiate sync, dry runs, posting batches, retries, and verification; distinguish preview from execution and enforce approved rule scopes.
+- **Reporting:** summarize processing, unmatched transactions, exceptions, accounting outcomes, balances, and audit changes by company and period.
+- **Permissions and audit:** company/tenant isolation, role-based permissions, explicit authorization for sensitive actions, secure OAuth or equivalent machine-to-machine authentication, least privilege, immutable audit trail, and idempotent command handling.
+
+The API/MCP must be independently usable by other approved clients; do not couple core business logic to ChatGPT-specific behavior. Never allow conversational instructions to bypass accounting rules, required confirmations, access boundaries, or posting safeguards.
+
+## 14. Success Criterion
 
 LedgerSync succeeds when most routine source events become correct accounting entries without user involvement, and new sources, companies, and accounting destinations can be added without rewriting the core.
 

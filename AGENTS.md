@@ -10,6 +10,13 @@ Before planning, coding, reviewing, or deploying changes in this repository, **r
 - ChatGPT or Meridian must not be runtime dependencies of unattended posting.
 - Preserve company isolation, explicit account routing, unique event keys, idempotent writes, retries with verification, versioned approvals, audit logs, and exception handling.
 
+## Mandatory ChatGPT management interface
+- Treat an authenticated LedgerSync API/MCP for direct ChatGPT management as a product requirement, not an optional add-on.
+- ChatGPT is a **control plane**, never a dependency of autonomous ingestion, classification, posting, reconciliation, or scheduling.
+- Design management operations for read-only inspection, versioned rule management, exception approval/rejection, controlled execution, reporting, permissions, and auditing.
+- Enforce per-company isolation, role-based access, explicit approvals for sensitive writes, idempotent commands, and full audit records at the LedgerSync backend. ChatGPT prompts cannot override these controls.
+- Keep the interface reusable by other clients; isolate the API/MCP adapter from the accounting engine.
+
 ## Change discipline
 - Inspect current implementation and approved accounting rules before editing.
 - Prefer official APIs and existing integrations; avoid unnecessary infrastructure.
