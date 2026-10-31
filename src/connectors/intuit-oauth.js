@@ -4,17 +4,35 @@ const noStore = {"Cache-Control":"no-store","Referrer-Policy":"no-referrer"};
 const json = (value,status=200) => Response.json(value,{status,headers:noStore});
 const encode = bytes => btoa(String.fromCharCode(...bytes)).replaceAll("+","-").replaceAll("/","_").replace(/=+$/,"");
 const sha = async value => encode(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value))));
+async function authorizationUrl(env) {
+ const state=encode(crypto.getRandomValues(new Uint8Array(32)));
+ await env.DB.prepare("INSERT INTO intuit_oauth_states (state_hash,expires_at) VALUES (?,?)").bind(await sha(state),new Date(Date.now()+600000).toISOString()).run();
+ const target=new URL(authorizeEndpoint);
+ for(const [key,value] of Object.entries({client_id:env.INTUIT_CLIENT_ID,scope:"com.intuit.quickbooks.accounting",redirect_uri:env.INTUIT_REDIRECT_URI,response_type:"code",state}))target.searchParams.set(key,value);
+ return target.toString();
+}
 export async function intuitOAuth(request,env,url) {
  if (!url.pathname.startsWith("/oauth/intuit/")) return null;
  if (!env.INTUIT_CLIENT_ID || !env.INTUIT_REDIRECT_URI || !env.INTUIT_OAUTH_ADMIN_KEY || !env.INTUIT_CLIENT_SECRET || !env.INTUIT_TOKEN_ENCRYPTION_KEY || !env.DB) return json({error:"oauth_unconfigured"},503);
  if (url.pathname === "/oauth/intuit/start") {
   if(request.method!=="POST") return new Response(null,{status:405});
   if(request.headers.get("Authorization")!=="Bearer "+env.INTUIT_OAUTH_ADMIN_KEY) return new Response(null,{status:404});
-  const state=encode(crypto.getRandomValues(new Uint8Array(32)));
-  await env.DB.prepare("INSERT INTO intuit_oauth_states (state_hash,expires_at) VALUES (?,?)").bind(await sha(state),new Date(Date.now()+600000).toISOString()).run();
-  const target=new URL(authorizeEndpoint);
-  for(const [key,value] of Object.entries({client_id:env.INTUIT_CLIENT_ID,scope:"com.intuit.quickbooks.accounting",redirect_uri:env.INTUIT_REDIRECT_URI,response_type:"code",state}))target.searchParams.set(key,value);
-  return json({authorization_url:target.toString(),expires_in:600});
+  return json({authorization_url:await authorizationUrl(env),expires_in:600});
+ }
+ if(url.pathname==="/oauth/intuit/invite") {
+  if(request.method!=="POST")return new Response(null,{status:405,headers:noStore});
+  if(request.headers.get("Authorization")!=="Bearer "+env.INTUIT_OAUTH_ADMIN_KEY)return new Response(null,{status:404,headers:noStore});
+  const ticket=encode(crypto.getRandomValues(new Uint8Array(32)));
+  await env.DB.prepare("INSERT INTO intuit_oauth_tickets(ticket_hash,expires_at) VALUES (?,?)").bind(await sha(ticket),new Date(Date.now()+600000).toISOString()).run();
+  return json({connect_url:url.origin+"/oauth/intuit/connect?ticket="+ticket,expires_in:600});
+ }
+ if(url.pathname==="/oauth/intuit/connect") {
+  if(request.method!=="GET")return new Response(null,{status:405,headers:noStore});
+  const ticket=url.searchParams.get("ticket");
+  if(!ticket||! /^[A-Za-z0-9_-]{43}$/.test(ticket))return json({error:"invalid_or_expired_link"},403);
+  const claim=await env.DB.prepare("DELETE FROM intuit_oauth_tickets WHERE ticket_hash=? AND expires_at>? RETURNING ticket_hash").bind(await sha(ticket),new Date().toISOString()).first();
+  if(!claim)return json({error:"invalid_or_expired_link"},403);
+  return new Response(null,{status:303,headers:{...noStore,"Location":await authorizationUrl(env)}});
  }
  if(url.pathname==="/oauth/intuit/callback") {
   if(request.method!=="GET")return new Response(null,{status:405});
