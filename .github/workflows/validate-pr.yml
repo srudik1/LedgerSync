@@ -16,15 +16,23 @@ jobs:
       - name: Validate JavaScript syntax
         run: |
           node --check src/index.js
+          node --check src/connectors/intuit-oauth.js
+          node --check src/connectors/intuit-tokens.js
+          node --check src/connectors/intuit-token-store.js
           node --check src/sync/cron-audit.js
           node --check src/connectors/monobank-mcp.js
           node --check src/sync/monobank-import.js
           node --check src/sync/ledger.js
           node --check src/sync/reconcile.js
+          node --check src/sync/posting-planner.js
       - name: Test cron audit failure and duplicate handling
         run: node tests/cron-audit.test.mjs
       - name: Test read-only bank-to-QuickBooks reconciliation
         run: node --test tests/reconcile.test.mjs
+      - name: Test automatic posting planner (no writes)
+        run: node --test tests/posting-planner.test.mjs
+      - name: Test Intuit OAuth (no live connectivity)
+        run: node --test tests/intuit-oauth.test.mjs
       - name: Validate D1 and scheduled environments
         run: |
           node --input-type=module <<'NODE'
