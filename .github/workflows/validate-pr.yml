@@ -17,6 +17,7 @@ jobs:
         run: |
           node --check src/index.js
           node --check src/connectors/intuit-oauth.js
+          node --check src/connectors/operator-access.js
           node --check src/connectors/intuit-tokens.js
           node --check src/connectors/intuit-token-store.js
           node --check src/sync/cron-audit.js
