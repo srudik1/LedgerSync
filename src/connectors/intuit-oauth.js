@@ -21,6 +21,7 @@ export async function intuitOAuth(request,env,url) {
   if(!jwt||!env.INTUIT_ACCESS_AUD||!env.INTUIT_ACCESS_TEAM_DOMAIN)return json({error:"operator_auth_required"},403);
   const verified=await verifyOperatorJwt(jwt,env);
   if(!verified)return json({error:"operator_auth_required"},403);
+  if(url.searchParams.get("diagnostic")==="1") { const expected="https://ledger-sync.srudik.workers.dev/oauth/intuit/callback"; return json({redirect_uri_exact_match:env.INTUIT_REDIRECT_URI===expected,client_id_format_valid:/^[A-Za-z0-9_-]{10,160}$/.test(env.INTUIT_CLIENT_ID),client_id_fingerprint:(await sha(env.INTUIT_CLIENT_ID)).slice(0,12)}); }
   return new Response(null,{status:303,headers:{...noStore,Location:await authorizationUrl(env)}});
  }
  if (url.pathname === "/oauth/intuit/start") {
