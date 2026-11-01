@@ -1,3 +1,4 @@
+import {verifyOperatorJwt} from "./operator-access.js";
 import {connectIntuitRealm} from "./intuit-tokens.js";
 const authorizeEndpoint = "https://appcenter.intuit.com/connect/oauth2";
 const noStore = {"Cache-Control":"no-store","Referrer-Policy":"no-referrer"};
@@ -14,6 +15,14 @@ async function authorizationUrl(env) {
 export async function intuitOAuth(request,env,url) {
  if (!url.pathname.startsWith("/oauth/intuit/")) return null;
  if (!env.INTUIT_CLIENT_ID || !env.INTUIT_REDIRECT_URI || !env.INTUIT_OAUTH_ADMIN_KEY || !env.INTUIT_CLIENT_SECRET || !env.INTUIT_TOKEN_ENCRYPTION_KEY || !env.DB) return json({error:"oauth_unconfigured"},503);
+ if(url.pathname==="/oauth/intuit/launch") {
+  if(request.method!=="GET")return new Response(null,{status:405,headers:noStore});
+  const jwt=request.headers.get("Cf-Access-Jwt-Assertion");
+  if(!jwt||!env.INTUIT_ACCESS_AUD||!env.INTUIT_ACCESS_TEAM_DOMAIN)return json({error:"operator_auth_required"},403);
+  const verified=await verifyOperatorJwt(jwt,env);
+  if(!verified)return json({error:"operator_auth_required"},403);
+  return new Response(null,{status:303,headers:{...noStore,Location:await authorizationUrl(env)}});
+ }
  if (url.pathname === "/oauth/intuit/start") {
   if(request.method!=="POST") return new Response(null,{status:405});
   if(request.headers.get("Authorization")!=="Bearer "+env.INTUIT_OAUTH_ADMIN_KEY) return new Response(null,{status:404});
