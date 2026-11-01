@@ -7,7 +7,7 @@ export async function verifyOperatorJwt(token,env){
   if(header.alg!=="RS256"||!header.kid)return false;
   const now=Math.floor(Date.now()/1000);
   if(payload.aud!==env.INTUIT_ACCESS_AUD && !(Array.isArray(payload.aud)&&payload.aud.includes(env.INTUIT_ACCESS_AUD)))return false;
-  if(payload.iss!==env.INTUIT_ACCESS_TEAM_DOMAIN+"/")return false;
+  if(payload.iss!==env.INTUIT_ACCESS_TEAM_DOMAIN)return false;
   if(payload.exp<=now||payload.nbf>now+60)return false;
   if(payload.email!=="srudik@gmail.com")return false;
   const u=new URL(env.INTUIT_ACCESS_TEAM_DOMAIN+"/cdn-cgi/access/certs");
