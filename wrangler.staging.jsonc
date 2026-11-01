@@ -6,9 +6,16 @@
   "workers_dev": true,
   "vars": {
     "LEDGERSYNC_ENV": "staging",
-    "MONOBANK_MCP_URL": "https://monobank.srudik.workers.dev/mcp"
+    "MONOBANK_MCP_URL": "https://monobank.srudik.workers.dev/mcp",
+    "INTUIT_ACCESS_AUD": "8fab2701b59b19acd7796cb382d75f81822ff88146734e9eed3f60c0a3e0de9a",
+    "INTUIT_ACCESS_TEAM_DOMAIN": "https://floral-lake-0d9c.cloudflareaccess.com"
   },
-  "services": [{ "binding": "MONOBANK_SERVICE", "service": "monobank" }],
+  "services": [
+    {
+      "binding": "MONOBANK_SERVICE",
+      "service": "monobank"
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",
